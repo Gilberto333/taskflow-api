@@ -12,14 +12,20 @@ app.get("/", (req, res) => {
   res.json({ api: "TaskFlow", versao: "1.0", status: "online" });
 });
 
-app.get("/tarefas/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const tarefa = tarefas.find((t) => t.id === id);
+app.get("/tarefas", (req, res) => {
+  const { coluna, prioridade } = req.query;
 
-  if (!tarefa) {
-    res.status(400).json({ Error: "Tarefa não encontrada!" });
+  let resultado = tarefas;
+
+  if (coluna) {
+    resultado = resultado.filter((t) => t.coluna === coluna);
   }
-  res.json(tarefa);
+
+  if (prioridade) {
+    resultado = resultado.filter((t) => t.prioridade === prioridade);
+  }
+
+  res.json(resultado);
 });
 
 app.listen(PORTA, () => {
