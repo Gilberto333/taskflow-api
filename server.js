@@ -8,21 +8,20 @@ const tarefas = [
   { id: 3, texto: "Testar Postman", prioridade: "media", coluna: "concluido" },
 ];
 
-
 app.get("/", (req, res) => {
-  res.json({api: 'TaskFlow', versao: '1.0', status: 'online'})
-})
+  res.json({ api: "TaskFlow", versao: "1.0", status: "online" });
+});
 
-app.get('/tarefas/:id', (req, res) =>{
-  const id = Number(req.params.id)
-const tarefa = tarefas.find(t => t.id === id);
+app.get("/tarefas/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const tarefa = tarefas.find((t) => t.id === id);
 
-if(!tarefa){
-  res.status(400).json({Error: "Tarefa não encontrada!"})
-}
-res.json(tarefa)
-})
+  if (!tarefa) {
+    res.status(400).json({ Error: "Tarefa não encontrada!" });
+  }
+  res.json(tarefa);
+});
 
-app.listen(PORTA, () =>{
-  console.log(` servidor rodando em http://localhost:${PORTA}`)
-})
+app.listen(PORTA, () => {
+  console.log(` servidor rodando em http://localhost:${PORTA}`);
+});
