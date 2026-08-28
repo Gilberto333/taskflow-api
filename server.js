@@ -1,93 +1,127 @@
 const express = require('express');
 const app = express();
 const PORT = 3000;
+app.use(express.json());
 
-let proximoId = 4
-app.use(express.json())
+const listaUsuarios = [{id: 1, nome: 'Gilberto', email: "admin123@gmail.com", senha: "1234"}];
+let idUsuario = 2;
+const listaTarefas = [{id: 1, texto: "Fazer frontend", prioridade: "alta", coluna: "andamento"}];
+let idTarefa = 2;
 
-const usuarios = [
-  {email: "Admin", senha: "1234"},
-{email: 'client', senha : "4321"}]
 
-const listaTarefas= [{id: 1, texto: "Estudar node", prioridade: "Media", coluna: "feito" },
-  {id: 2, texto: "Estudar react", prioridade: "alta", coluna: "afazer"},
-  {id: 3, texto: "Estudar css", prioridade: "baixa", coluna: "andamento"}
-];
 
-app.get("/tarefas", (req, res) => {
-  res.json(listaTarefas);
+app.get('/tarefas', (req, res) => {
+  res.status(200).json(listaTarefas);
 });
 
 app.get("/tarefas/:id", (req, res) => {
   const id = Number(req.params.id);
+  const tarefaReq = listaTarefas.find(t => t.id === id);
 
-  const tarefas = listaTarefas.find(t => t.id === id);
-  
-  res.json(tarefas);
+  if (!tarefaReq) {
+    return res.status(404).json({ mensagem: "Tarefa não encontrada" });
+  }
+  res.status(200).json(tarefaReq);
 });
 
-app.get("/usuarios", (req, res) => {
-  const email = req.query.email
+app.post("/tarefas", (req, res) => {
+  const { texto, prioridade, coluna } = req.body;
+  const novaTarefa = {
+    id: idTarefa++,
+    texto,
+    prioridade,
+    coluna
+  };
 
-  let usuario = usuarios.filter(t => t.email === email)
+  listaTarefas.push(novaTarefa);
+  res.status(201).json({ mensagem: 'A tarefa foi criada com sucesso!', novaTarefa });
+});
 
-  if(!email){
-    res.status(400).json({mensagem: "Usuario não encontrado!"})
+app.put("/tarefas/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const { texto, prioridade, coluna } = req.body;
+  const index = listaTarefas.findIndex(t => t.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ mensagem: "Não foi possível atualizar esta tarefa, verifique se ela é existente" });
   }
-  res.json(usuario)
-})
 
-app.post("/tarefas", (req,res) => {
-const {texto, prioridade, coluna} = req.body;
-
-const novaTarefa = {
-  id: proximoId++,
-  texto: texto,
-  prioridade: prioridade || "alta",
-  coluna: coluna || "feito"
-}
-
-listaTarefas.push(novaTarefa)
-res.status(201).json(novaTarefa);
-})
-
-app.put("/tarefas/:id", (req, res) =>{
-  const id = Number(req.params.id)
-  const {texto, prioridade, coluna} = req.body
-let indice = listaTarefas.findIndex(t => t.id === id)
-
-if(indice === -1){
- return res.status(400).json({mensagem: "Tarefa não encontrada"})
-}
-
-const tarefaAtualizada = {texto, id, prioridade, coluna}
-listaTarefas[indice] = tarefaAtualizada
-
-res.json(tarefaAtualizada)
-})
+  listaTarefas[index] = { id, texto, prioridade, coluna };
+  res.status(200).json(listaTarefas[index]);
+});
 
 app.delete("/tarefas/:id", (req, res) => {
-  const id = Number(req.params.id)
-  const removerTarefa = listaTarefas.findIndex(t => t.id === id);
+  const id = Number(req.params.id);
+  const index = listaTarefas.findIndex(t => t.id === id);
 
-  if(removerTarefa === -1){
-    return res.status(404).json({mensagem: "Tarefa não encontrada"})
+  if (index === -1) {
+    return res.status(404).json({ mensagem: "Não foi possível deletar: Tarefa não existente" });
   }
-  listaTarefas.splice(removerTarefa, 1)
 
-  res.json(listaTarefas)
-})
+  const [tarefaDeletada] = listaTarefas.splice(index, 1);
+  res.status(200).json({ mensagem: "Tarefa deletada com sucesso!", tarefaDeletada });
+});
+
+
+
+app.get('/usuarios', (req, res) => {
+  res.status(200).json(listaUsuarios);
+});
+
+app.get("/usuarios/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const usuarioReq = listaUsuarios.find(u => u.id === id);
+
+  if (!usuarioReq) {
+    return res.status(404).json({ mensagem: "Usuário não encontrado" });
+  }
+  res.status(200).json(usuarioReq);
+});
+
+app.post("/usuarios", (req, res) => {
+  const { nome, email, senha } = req.body;
+  const novoUsuario = {
+    id: idUsuario++,
+    nome,
+    email,
+    senha
+  };
+
+  listaUsuarios.push(novoUsuario);
+  res.status(201).json({ mensagem: 'O usuário foi criado com sucesso!', novoUsuario });
+});
+
+app.put("/usuarios/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const { nome, email, senha } = req.body;
+  const index = listaUsuarios.findIndex(u => u.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ mensagem: "Não foi possível atualizar este usuário, verifique se é existente" });
+  }
+
+  listaUsuarios[index] = { id, nome, email, senha };
+  res.status(200).json(listaUsuarios[index]);
+});
+
+app.delete("/usuarios/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = listaUsuarios.findIndex(u => u.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ mensagem: "Não foi possível deletar: Usuário não existente" });
+  }
+
+  const [usuarioDeletado] = listaUsuarios.splice(index, 1);
+  res.status(200).json({ mensagem: "Usuário deletado com sucesso!", usuarioDeletado });
+});
 
 app.use((req, res) => {
 res.status(404).json({
-
 erro: 'Rota não encontrada',
 metodo: req.method,
 caminho: req.url,
 });
-
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-})
+app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
