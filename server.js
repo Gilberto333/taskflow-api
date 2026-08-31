@@ -8,8 +8,6 @@ let idUsuario = 2;
 const listaTarefas = [{id: 1, texto: "Fazer frontend", prioridade: "alta", coluna: "andamento"}];
 let idTarefa = 2;
 
-
-
 app.get('/tarefas', (req, res) => {
   res.status(200).json(listaTarefas);
 });
@@ -62,8 +60,6 @@ app.delete("/tarefas/:id", (req, res) => {
   res.status(200).json({ mensagem: "Tarefa deletada com sucesso!", tarefaDeletada });
 });
 
-
-
 app.get('/usuarios', (req, res) => {
   res.status(200).json(listaUsuarios);
 });
@@ -76,7 +72,7 @@ app.get("/usuarios/:id", (req, res) => {
     return res.status(404).json({ mensagem: "Usuário não encontrado" });
   }
   res.status(200).json(usuarioReq);
-});
+}) ;
 
 app.post("/usuarios", (req, res) => {
   const { nome, email, senha } = req.body;
