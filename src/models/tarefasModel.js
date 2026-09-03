@@ -1,4 +1,4 @@
-const tarefas = [{ id: 1, titulo: "Estudar MVC", concluida: false }]
+const tarefas = [{ id: 1, titulo: "Estudar MVC", prioridade: "media", coluna: "aFazer" }]
 let id = 1
 
 function listarTarefas() {

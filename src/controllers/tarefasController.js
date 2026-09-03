@@ -19,12 +19,13 @@ function listarTarefasId(req, res) {
 function criarTarefa(req, res) {
     const listaTarefas = TarefasModel.listarTarefas()
     let id = TarefasModel.proximoId()
-    const { titulo, concluida } = req.body
+    const { titulo, coluna, prioridade } = req.body
 
     const novaTarefa = {
         id: id, 
         titulo: titulo, 
-        concluida: concluida !== undefined ? concluida : false
+       prioridade: prioridade,
+       coluna: coluna
     }
 
     listaTarefas.push(novaTarefa)
@@ -33,7 +34,7 @@ function criarTarefa(req, res) {
 
 function editarTarefa(req, res) {
     const id = parseInt(req.params.id);
-    const { titulo, concluida } = req.body;
+    const { titulo, coluna, prioridade } = req.body;
     const tarefas = TarefasModel.listarTarefas();
     const index = tarefas.findIndex(t => t.id === id);
 
@@ -44,7 +45,8 @@ function editarTarefa(req, res) {
     tarefas[index] = {
         id,
         titulo: titulo || tarefas[index].titulo,  
-        concluida: concluida !== undefined ? concluida : tarefas[index].concluida
+        prioridade: prioridade || tarefas[index].prioridade,
+        coluna: coluna || tarefas[index].coluna
     };
     
     return res.status(200).json(tarefas[index]);
