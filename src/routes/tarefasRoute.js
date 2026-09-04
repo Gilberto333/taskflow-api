@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-
 const listarTarefasController = require("../controllers/tarefasController")
 
 router.get("/tarefas", listarTarefasController.listarTarefas)

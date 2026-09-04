@@ -1,18 +1,11 @@
 const express = require('express')
 const router = express.Router()
+const usuariosController = require("../controllers/usuariosController")
 
-
-const listarUsuariosController = require("../controllers/usuariosController")
-
-router.get("/usuarios", listarUsuariosController.listarUsuarios)
-router.get("/usuarios/:id", listarUsuariosController.listarUsuariosId)
-router.post( "/usuarios", listarUsuariosController.criarUsuario)
-router.put("/usuarios/:id", listarUsuariosController.editarUsuario)
-router.delete("/usuarios/:id", listarUsuariosController.deletarUsuario)
-
-
-
-
-
+router.get("/usuarios", usuariosController.listarUsuarios)
+router.get("/usuarios/:id", usuariosController.listarUsuariosId)
+router.post("/usuarios", usuariosController.criarUsuario)
+router.put("/usuarios/:id", usuariosController.editarUsuario)
+router.delete("/usuarios/:id", usuariosController.deletarUsuario)
 
 module.exports = router
