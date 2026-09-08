@@ -1,4 +1,4 @@
-const tarefas = [{usuarioId: 1,  usuario: "Gilberto",titulo: "Estudar MVC", prioridade: "media", coluna: "aFazer" }]
+const tarefas = [{usuarioId: 1, titulo: "Estudar MVC", prioridade: "media", coluna: "aFazer" }]
 let id = 1
 
 function listarTarefas() {
@@ -40,8 +40,8 @@ function editarTarefa(idTarefa, dados) {
     return tarefas[index];
 }
 
-function deletarTarefa(idTarefa) {
-    const index = tarefas.findIndex(t => t.id === idTarefa)
+function deletarTarefa(usuarioId) {
+    const index = tarefas.findIndex(t => t.usuarioId === usuarioId)
     if (index === -1) {
         return null;
     }

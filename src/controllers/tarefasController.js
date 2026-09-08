@@ -33,7 +33,7 @@ function editarTarefa(req, res) {
 
     if (!tarefaAtualizada) {
         return res.status(404).json({ erro: "Tarefa não encontrada." });
-    }
+    }                                                                                                            
     
     return res.status(200).json(tarefaAtualizada);
 }
