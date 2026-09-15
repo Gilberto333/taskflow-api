@@ -1,54 +1,34 @@
-const projetos = [{ id: 1, descriçao: "taskflow", ativo: true }]
-let id = 1
+let projetos = [{ id: 1, descricao: "Projetos para fazer logo", ativo: true }];
 
-function listarProjetos() {
-    return projetos
-}
+let proximoId = 2;
 
-function buscarPorId(idProjeto) {
-    return projetos.find(t => t.id === idProjeto)
-}
+module.exports = {
+  listar: () => projetos,
 
-function criarProjeto(dados) {
-    id = id + 1;
-    const novoProjeto = {
-        id: id, 
-        descriçao: dados.descriçao, 
-        ativo: dados.ativo !== undefined ? dados.ativo : true
-    }
-    projetos.push(novoProjeto)
-    return novoProjeto
-}
+  buscar: (id) => projetos.find((p) => p.id === id),
 
-function editarProjeto(idProjeto, dados) {
-    const index = projetos.findIndex(t => t.id === idProjeto);
-    if (index === -1) {
-        return null;
-    }
-    
-    projetos[index] = {
-        id: idProjeto,
-        descriçao: dados.descriçao || projetos[index].descriçao,  
-        ativo: dados.ativo !== undefined ? dados.ativo : projetos[index].ativo
+  adicionar: ({ descricao, ativo }) => {
+    const novo = {
+      id: proximoId++,
+      descricao: descricao || "teste esse projeto",
+      ativo: ativo !== undefined ? ativo : true,
     };
-    
-    return projetos[index];
-}
+    projetos.push(novo);
+    return novo;
+  },
 
-function deletarProjeto(idProjeto) {
-    const index = projetos.findIndex(t => t.id === idProjeto)
-    if (index === -1) {
-        return null;
-    }
-    
-    const removido = projetos.splice(index, 1)[0]
-    return removido;
-}
+  atualizar: (id, dados) => {
+    const idx = projetos.findIndex((p) => p.id === id);
+    if (idx === -1) return null;
 
-module.exports = { 
-    listarProjetos, 
-    buscarPorId, 
-    criarProjeto, 
-    editarProjeto, 
-    deletarProjeto 
-}
+    projetos[idx] = { id, ...dados };
+    return projetos[idx];
+  },
+
+  remover: (id) => {
+    const idx = projetos.findIndex((p) => p.id === id);
+    if (idx === -1) return null;
+
+    return projetos.splice(idx, 1)[0];
+  },
+};

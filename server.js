@@ -1,15 +1,44 @@
-const express = require('express')
-const app = express()
-const PORT = 3000
-const logger = require('./src/middlewares/logger');
-app.use(logger); 
-app.use('/tarefas', tarefasRoutes);
-app.use('/usuarios', usuariosRoutes);
-app.use(express.json())
-const rotas = require("./src/routes/usuarioRoute")
-const rotasProjetos = require("./src/routes/projetosRouter")
-const rotasTarefas = require("./src/routes/tarefasRoute")
-app.use(rotas)
-app.use(rotasProjetos)
-app.use(rotasTarefas)
-app.listen(PORT, () => console.log(`servidor rodando em http://localhost:${PORT}`))
+require("dotenv").config();
+
+const logger = require("./src/middlewares/logger");
+const validarContentType = require("./src/middlewares/validarContetType");
+const temporizador = require("./src/middlewares/temporizador");
+const autenticar = require("./src/middlewares/autenticar");
+
+const express = require("express");
+
+const tarefasRoutes = require("./src/routes/tarefas.Routes");
+const usuariosRoutes = require("./src/routes/usuarios.Routes");
+const projetosRoutes = require("./src/routes/projetos.Routes");
+const authRoutes = require("./src/routes/auth.routes");
+
+const app = express();
+const cors = require("cors");
+const PORTA = process.env.PORTA || 3000;
+
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "https://www.google.com/",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400,
+  }),
+);
+
+app.use(express.json());
+app.use(validarContentType);
+app.use(logger);
+app.use(temporizador);
+
+app.use("/auth",  authRoutes);
+app.use("/usuarios", autenticar, usuariosRoutes);
+app.use("/tarefas", autenticar, tarefasRoutes);
+app.use("/projetos", autenticar, projetosRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({
+    erro: "Rota não encontrada",
+  });
+});
+
+app.listen(PORTA, () => console.log(`Porta ${PORTA}`));

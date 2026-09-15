@@ -1,56 +1,55 @@
-const usuarios = [{ id: 1, nome: "admin", email: "admin@123gmail.com", senha: "1234" }]
-let id = 1
+let usuarios = [
+  { id: 1, 
+    nome: "user",
+    email: "user@use12gmail.com", 
+    senha: "1543"
+   },
 
-function listarUsuarios() {
-    return usuarios
-}
+];
 
-function buscarPorId(idUsuario) {
-    return usuarios.find(t => t.id === idUsuario)
-}
+let proximoId = 2;
 
-function criarUsuario(dados) {
-    id = id + 1;
-    const novoUsuario = {
-        id: id, 
-        nome: dados.nome, 
-        email: dados.email, 
-        senha: dados.senha
+module.exports = {
+  listar: ({ nome, email } = {}) => {
+    let resultado = usuarios;
+
+    if (nome) {
+      resultado = resultado.filter((u) => u.nome === nome);
     }
-    usuarios.push(novoUsuario)
-    return novoUsuario
-}
-
-function editarUsuario(idUsuario, dados) {
-    const index = usuarios.findIndex(t => t.id === idUsuario);
-    if (index === -1) {
-        return null;
+    if (email) {
+      resultado = resultado.filter((u) => u.email === email);
     }
-    
-    usuarios[index] = {
-        id: idUsuario,
-        nome: dados.nome || usuarios[index].nome,  
-        email: dados.email || usuarios[index].email,
-        senha: dados.senha || usuarios[index].senha
+
+    return resultado;
+  },
+
+  buscar: (id) => usuarios.find((u) => u.id === id),
+
+  buscarPorEmail: (email) => usuarios.find((u) => u.email === email),
+
+  adicionar: ({ nome, email, senha }) => {
+    const novo = {
+      id: proximoId++,
+      nome: nome || "Gilberto",
+      email: email || "admin@123gmail.com",
+      senha: senha || "1234",
     };
-    
-    return usuarios[index];
-}
+    usuarios.push(novo);
+    return novo;
+  },
 
-function deletarUsuario(idUsuario) {
-    const index = usuarios.findIndex(t => t.id === idUsuario)
-    if (index === -1) {
-        return null;
-    }
-    
-    const removido = usuarios.splice(index, 1)[0]
-    return removido;
-}
+  atualizar: (id, dados) => {
+    const idx = usuarios.findIndex((u) => u.id === id);
+    if (idx === -1) return null;
 
-module.exports = { 
-    listarUsuarios, 
-    buscarPorId, 
-    criarUsuario, 
-    editarUsuario, 
-    deletarUsuario 
-}
+    usuarios[idx] = { id, ...dados };
+    return usuarios[idx];
+  },
+
+  remover: (id) => {
+    const idx = usuarios.findIndex((u) => u.id === id);
+    if (idx === -1) return null;
+
+    return usuarios.splice(idx, 1)[0];
+  },
+};

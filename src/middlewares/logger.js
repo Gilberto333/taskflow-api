@@ -1,4 +1,4 @@
-function logger(req, res, next) {
+    function logger(req, res, next) {
 
 const agora = new Date().toISOString();
 
@@ -11,7 +11,5 @@ const ip = req.ip || req.connection.remoteAddress;
 console.log(`[${agora}] ${metodo} ${url} — IP: ${ip}`);
 
 next();
-
 }
-
 module.exports = logger;
