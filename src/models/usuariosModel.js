@@ -1,8 +1,8 @@
 let usuarios = [
   { id: 1, 
     nome: "user",
-    email: "user@use12gmail.com", 
-    senha: "1543"
+    email: "admin@gmail.com", 
+    senha: "1234"
    },
 
 ];
