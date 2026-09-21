@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 
-const tarefasController = require("../controllers/tarefasController");
+const tarefasController = require("../controllers/tarefas.Controller");
 const validar = require("../middlewares/validar");
-const schemas = require("../middlewares/schemas"); // Corrigido 'schemar' para 'schemas'
+const schemas = require("../middlewares/schemar"); // Corrigido 'schemar' para 'schemas'
 
 router.get("/estatisticas", tarefasController.estatisticas);
 router.get("/", tarefasController.listar);
