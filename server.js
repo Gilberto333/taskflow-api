@@ -19,7 +19,7 @@ const PORT = process.env.PORT || process.env.PORTA || 3000;
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "https://task-flow-beta-sepia.vercel.app",
+    origin: process.env.CORS_ORIGIN || "https://task-flow-beta-sepia.vercel.app/",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     maxAge: 86400,
@@ -63,7 +63,7 @@ app.use((err, req, res, next) => {
 });
 
 if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+  app.listen(PORT, () => console.log(`Servidor rodando na porta http://localhost:${PORT}`));
 }
 
 module.exports = app;
