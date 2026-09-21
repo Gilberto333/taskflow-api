@@ -3,7 +3,7 @@ const usuarioModel = require("./usuariosModel"); // Adicionada importação nece
 let tarefas = [
   {
     id: 1,
-    texto: "Estudar Node",
+    texto: "Fazer React",
     prioridade: "alta",
     coluna: "andamento",
     cidade: "",
@@ -12,7 +12,7 @@ let tarefas = [
   },
   {
     id: 2,
-    texto: "Criar API",
+    texto: "Construir api",
     prioridade: "alta",
     coluna: "andamento",
     cidade: "",
@@ -21,7 +21,7 @@ let tarefas = [
   },
   {
     id: 3,
-    texto: "Testar Postman",
+    texto: "Testar no Postman",
     prioridade: "media",
     coluna: "concluido",
     cidade: "",
