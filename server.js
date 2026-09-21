@@ -18,7 +18,7 @@ const PORTA = process.env.PORTA || 3000;
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "https://vercel.com/senai-4176/taskflow-api/",
+    origin: process.env.CORS_ORIGIN || "https://vercel.com/senai-4176/task-flow",
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     maxAge: 86400,
