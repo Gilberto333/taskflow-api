@@ -1,3 +1,5 @@
+const usuarioModel = require("./usuariosModel"); // Adicionada importação necessária
+
 let tarefas = [
   {
     id: 1,
@@ -34,10 +36,7 @@ module.exports = {
   listar: ({ coluna, prioridade, usuarioId } = {}) => {
     if (usuarioId !== undefined) {
       const usuarioExiste = usuarioModel.buscar(parseInt(usuarioId));
-
-      if (!usuarioExiste) {
-        return [];
-      }
+      if (!usuarioExiste) return [];
     }
 
     let resultado = tarefas;
@@ -70,7 +69,7 @@ module.exports = {
 
   contarPorUsuarioEColuna: (usuarioId, coluna) =>
     tarefas.filter(
-      (t) => t.usuarioId === usuarioId && (t.coluna || "afazer") === coluna,
+      (t) => t.usuarioId === usuarioId && (t.coluna || "afazer") === coluna
     ).length,
 
   adicionar: ({ texto, prioridade, coluna, cidade, usuarioId }) => {
@@ -81,7 +80,7 @@ module.exports = {
       coluna: coluna || "afazer",
       cidade: cidade || "",
       usuarioId,
-      concluidaEm: novaColuna === "concluido" ? new Date().toISOString() : null,
+      concluidaEm: coluna === "concluido" ? new Date().toISOString() : null, // Corrigido: novaColuna -> coluna
     };
     tarefas.push(nova);
     return nova;
@@ -138,7 +137,7 @@ module.exports = {
     };
 
     const colunaMaisTarefas = Object.entries(porColuna).sort(
-      (a, b) => b[1] - a[1],
+      (a, b) => b[1] - a[1]
     )[0][0];
 
     return {

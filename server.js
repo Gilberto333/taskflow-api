@@ -4,7 +4,7 @@ const express = require("express");
 const cors = require("cors");
 
 const logger = require("./src/middlewares/logger");
-const validarContentType = require("./src/middlewares/validarContetType"); // Corrigido erro de digitação
+const validarContentType = require("./src/middlewares/validarContentType"); // Nome corrigido
 const temporizador = require("./src/middlewares/temporizador");
 const autenticar = require("./src/middlewares/autenticar");
 
@@ -31,6 +31,12 @@ app.use(express.json());
 // Middlewares globais
 app.use(logger);
 app.use(temporizador);
+app.use(validarContentType);
+
+// Rota inicial de teste
+app.get("/", (req, res) => {
+  res.status(200).json({ status: "API Online" });
+});
 
 // Rotas Públicas
 app.use("/auth", authRoutes);
@@ -47,8 +53,17 @@ app.use((req, res) => {
   });
 });
 
+// Middleware Global de Tratamento de Erros (Evita Tela de Erro da Vercel)
+app.use((err, req, res, next) => {
+  console.error("Erro interno:", err);
+  res.status(500).json({
+    erro: "Erro interno no servidor",
+    mensagem: err.message,
+  });
+});
 
+if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
-
+}
 
 module.exports = app;
