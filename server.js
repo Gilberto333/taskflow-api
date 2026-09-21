@@ -4,7 +4,7 @@ const express = require("express");
 const cors = require("cors");
 
 const logger = require("./src/middlewares/logger");
-const validarContentType = require("./src/middlewares/validarContentType"); // Nome corrigido
+const validarContentType = require("./src/middlewares/validarContentType");
 const temporizador = require("./src/middlewares/temporizador");
 const autenticar = require("./src/middlewares/autenticar");
 
@@ -19,7 +19,7 @@ const PORT = process.env.PORT || process.env.PORTA || 3000;
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "https://task-flow-beta-sepia.vercel.app/",
+    origin: process.env.CORS_ORIGIN || "https://task-flow-beta-sepia.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     maxAge: 86400,
@@ -28,32 +28,32 @@ app.use(
 
 app.use(express.json());
 
-// Middlewares globais
+
 app.use(logger);
 app.use(temporizador);
 app.use(validarContentType);
 
-// Rota inicial de teste
+
 app.get("/", (req, res) => {
   res.status(200).json({ status: "API Online" });
 });
 
-// Rotas Públicas
+
 app.use("/auth", authRoutes);
 
-// Rotas Protegidas (Exigem Token JWT)
+
 app.use("/usuarios", autenticar, usuariosRoutes);
 app.use("/tarefas", autenticar, tarefasRoutes);
 app.use("/projetos", autenticar, projetosRoutes);
 
-// Tratamento para rotas inexistentes (404)
+
 app.use((req, res) => {
   res.status(404).json({
     erro: "Rota não encontrada",
   });
 });
 
-// Middleware Global de Tratamento de Erros (Evita Tela de Erro da Vercel)
+
 app.use((err, req, res, next) => {
   console.error("Erro interno:", err);
   res.status(500).json({

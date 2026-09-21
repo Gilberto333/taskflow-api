@@ -3,7 +3,7 @@ const router = express.Router();
 const usuariosController = require("../controllers/usuarios.Controller");
 
 const validar = require("../middlewares/validar");
-const schemas = require("../middlewares/schemar"); // Corrigido 'schemar' para 'schemas'
+const schemas = require("../middlewares/schemar"); 
 
 router.get("/", usuariosController.listar);
 router.post("/", validar(schemas.usuario), usuariosController.criar);

@@ -1,6 +1,6 @@
 function corsMiddleware(req, res, next) {
   // Define a origem permitida como a do seu frontend
-  res.setHeader("Access-Control-Allow-Origin", "https://task-flow-beta-sepia.vercel.app/");
+  res.setHeader("Access-Control-Allow-Origin", "https://task-flow-beta-sepia.vercel.app");
 
   res.setHeader(
     "Access-Control-Allow-Methods",
