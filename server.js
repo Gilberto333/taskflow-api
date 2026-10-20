@@ -3,6 +3,14 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 
+
+const pool = require('./src/database/db');
+pool.query('SELECT NOW()', (err, res) => {
+if (err) console.error('Erro ao conectar:', err.message);
+else console.log('Banco conectado:', res.rows[0].now);
+});
+
+
 const logger = require("./src/middlewares/logger");
 const validarContentType = require("./src/middlewares/validarContentType");
 const temporizador = require("./src/middlewares/temporizador");
@@ -42,7 +50,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 
 
-app.use("/usuarios", autenticar, usuariosRoutes);
+app.use("/usuarios",  usuariosRoutes);
 app.use("/tarefas", autenticar, tarefasRoutes);
 app.use("/projetos", autenticar, projetosRoutes);
 

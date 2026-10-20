@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const usuarioModel = require("../models/usuariosModel");
 
 const authController = {
-  login(req, res) {
+  async login(req, res) { 
     try {
       const { email, senha } = req.body;
 
@@ -10,7 +10,7 @@ const authController = {
         return res.status(400).json({ erro: "Email e senha são obrigatórios" });
       }
 
-      const usuario = usuarioModel.buscarPorEmail(email);
+      const usuario = await usuarioModel.buscarPorEmail(email); 
 
       if (!usuario) {
         return res.status(401).json({ erro: "Credenciais inválidas" });
@@ -20,7 +20,6 @@ const authController = {
         return res.status(401).json({ erro: "Credenciais inválidas" });
       }
 
-      // Evita o erro 500 se o JWT_SECRET não estiver definido na Vercel
       const secret = process.env.JWT_SECRET || "chave_secreta_fallback_taskflow";
 
       const token = jwt.sign(
