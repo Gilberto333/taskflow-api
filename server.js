@@ -10,7 +10,7 @@ if (err) console.error('Erro ao conectar:', err.message);
 else console.log('Banco conectado:', res.rows[0].now);
 });
 
-
+const erros = require("./src/middlewares/erros")
 const logger = require("./src/middlewares/logger");
 const validarContentType = require("./src/middlewares/validarContentType");
 const temporizador = require("./src/middlewares/temporizador");
@@ -55,20 +55,18 @@ app.use("/tarefas", autenticar, tarefasRoutes);
 app.use("/projetos", autenticar, projetosRoutes);
 
 
+
+
+
+
 app.use((req, res) => {
   res.status(404).json({
     erro: "Rota não encontrada",
   });
 });
 
+app.use(erros)
 
-app.use((err, req, res, next) => {
-  console.error("Erro interno:", err);
-  res.status(500).json({
-    erro: "Erro interno no servidor",
-    mensagem: err.message,
-  });
-});
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => console.log(`Servidor rodando na porta http://localhost:${PORT}`));

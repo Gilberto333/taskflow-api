@@ -33,7 +33,7 @@ const tarefasController = {
   async criar(req, res) {
     try {
       const { texto, prioridade, coluna } = req.body;
-      const usuarioId = req.usuario?.id; // ID extraído do token/middleware
+      const usuarioId = req.usuario?.id; 
 
       if (!texto) {
         return res.status(400).json({ erro: "O texto da tarefa é obrigatório" });
@@ -52,7 +52,6 @@ const tarefasController = {
         return res.status(400).json({ erro: "Usuário não encontrado" });
       }
 
-      // Validação do limite de tarefas em andamento
       if (coluna === "andamento") {
         const totalAndamento = await tarefaModel.contarPorUsuarioEColuna(
           usuarioId,
@@ -103,7 +102,6 @@ const tarefasController = {
       const usuarioAlvoId = usuarioId ? parseInt(usuarioId) : tarefaAtual.usuario_id;
       const proximaColuna = coluna || tarefaAtual.coluna;
 
-      // Checa se a tarefa está indo para "andamento" ou trocando de usuário já estando em "andamento"
       const mudouParaAndamento = proximaColuna === "andamento" && tarefaAtual.coluna !== "andamento";
       const trocouUsuarioEmAndamento = proximaColuna === "andamento" && usuarioAlvoId !== tarefaAtual.usuario_id;
 
