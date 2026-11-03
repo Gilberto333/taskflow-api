@@ -13,7 +13,6 @@ const usuariosRoutes = require('./src/routes/usuarios.routes');
 
 const app = express();
 
-// Trata a variável de ambiente CORS_ORIGIN
 const corsOrigin = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(url => url.trim().replace(/\/$/, ''))
   : ['https://task-flow-beta-sepia.vercel.app', 'http://localhost:5173', 'http://localhost:3000'];
@@ -25,7 +24,6 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-// Aplica o CORS para todas as requisições (inclusive OPTIONS)
 app.use(cors(corsOptions));
 
 app.use(express.json());
