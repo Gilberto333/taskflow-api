@@ -163,7 +163,6 @@ module.exports = {
     return result.rows[0] || null;
   },
 
-  // 10. Obter estatísticas
   obterEstatisticas: async (colunaFiltro) => {
     let query = 'SELECT coluna, prioridade FROM tarefas';
     const values = [];
