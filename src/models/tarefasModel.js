@@ -1,201 +1,97 @@
-const pool = require('../database/db');
+const prisma = require('../database/prisma');
 
-module.exports = {
+const incluirNomes = {
+  projetos: { select: { nome: true } },
+  usuarios: { select: { nome: true } },
+  prioridades: { select: { descricao: true } },
+};
 
-  listar: async ({ coluna, prioridade, usuarioId } = {}) => {
-    let query = `
-      SELECT id, texto, prioridade, coluna, cidade, 
-             usuario_id AS "usuarioId", 
-             concluida_em AS "concluidaEm" 
-      FROM tarefas
-    `;
-    const values = [];
-    const conditions = [];
+function formatarTarefa(tarefa) {
+  if (!tarefa) return null;
+  const { projetos, usuarios, prioridades, ...resto } = tarefa;
+  return {
+    ...resto,
+    projeto: projetos?.nome,
+    usuario: usuarios?.nome,
+    prioridade: prioridades?.descricao,
+  };
+}
 
-    if (coluna) {
-      values.push(coluna);
-      conditions.push(`coluna = $${values.length}`);
-    }
-
-    if (prioridade) {
-      values.push(prioridade);
-      conditions.push(`prioridade = $${values.length}`);
-    }
-
-    if (usuarioId !== undefined) {
-      values.push(usuarioId);
-      conditions.push(`usuario_id = $${values.length}`);
-    }
-
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    query += ' ORDER BY id ASC';
-
-    const result = await pool.query(query, values);
-    return result.rows;
-  },
-
-  listarPorColuna: async (coluna) => {
-    const query = `
-      SELECT id, texto, prioridade, coluna, cidade, 
-             usuario_id AS "usuarioId", 
-             concluida_em AS "concluidaEm" 
-      FROM tarefas 
-      WHERE coluna = $1 
-      ORDER BY id ASC
-    `;
-    const result = await pool.query(query, [coluna]);
-    return result.rows;
-  },
-
-  listarPorPrioridade: async (prioridade) => {
-    const query = `
-      SELECT id, texto, prioridade, coluna, cidade, 
-             usuario_id AS "usuarioId", 
-             concluida_em AS "concluidaEm" 
-      FROM tarefas 
-      WHERE prioridade = $1 
-      ORDER BY id ASC
-    `;
-    const result = await pool.query(query, [prioridade]);
-    return result.rows;
+const tarefaModel = {
+  listar: async () => {
+    const lista = await prisma.tarefas.findMany({
+      include: incluirNomes,
+      orderBy: { id: 'asc' },
+    });
+    return lista.map(formatarTarefa);
   },
 
   buscar: async (id) => {
-    const query = `
-      SELECT id, texto, prioridade, coluna, cidade, 
-             usuario_id AS "usuarioId", 
-             concluida_em AS "concluidaEm" 
-      FROM tarefas 
-      WHERE id = $1
-    `;
-    const result = await pool.query(query, [id]);
-    return result.rows[0] || null;
+    const tarefa = await prisma.tarefas.findUnique({
+      where: { id: Number(id) },
+      include: incluirNomes,
+    });
+    return tarefa ? formatarTarefa(tarefa) : null;
   },
 
-  contarPorUsuario: async (usuarioId) => {
-    const query = 'SELECT COUNT(*)::int AS total FROM tarefas WHERE usuario_id = $1';
-    const result = await pool.query(query, [usuarioId]);
-    return result.rows[0]?.total || 0;
-  },
-
-  contarPorUsuarioEColuna: async (usuarioId, coluna) => {
-    const query = `
-      SELECT COUNT(*)::int AS total 
-      FROM tarefas 
-      WHERE usuario_id = $1 AND coluna = $2
-    `;
-    const result = await pool.query(query, [usuarioId, coluna]);
-    return result.rows[0]?.total || 0;
-  },
-
-  adicionar: async ({ texto, prioridade = 'media', coluna = 'afazer', cidade = '', usuarioId }) => {
-    const concluidaEm = coluna === 'concluido' ? new Date().toISOString() : null;
-
-    const query = `
-      INSERT INTO tarefas (texto, prioridade, coluna, cidade, usuario_id, concluida_em)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id, texto, prioridade, coluna, cidade, 
-                usuario_id AS "usuarioId", 
-                concluida_em AS "concluidaEm"
-    `;
-    const values = [texto, prioridade, coluna, cidade, usuarioId, concluidaEm];
-
-    const result = await pool.query(query, values);
-    return result.rows[0];
+  adicionar: async (dados) => {
+    const tarefa = await prisma.tarefas.create({
+      data: {
+        texto: dados.texto,
+        coluna: dados.coluna || 'afazer',
+        ordem: Number(dados.ordem) || 0,
+        idprioridade: Number(dados.idprioridade) || 2,
+        usuario_id: Number(dados.usuario_id),
+        projeto_id: Number(dados.projeto_id),
+      },
+      include: incluirNomes,
+    });
+    return formatarTarefa(tarefa);
   },
 
   atualizar: async (id, dados) => {
-    const mapaCampos = {
-      texto: 'texto',
-      prioridade: 'prioridade',
-      coluna: 'coluna',
-      cidade: 'cidade',
-      usuarioId: 'usuario_id'
-    };
+    const idNum = Number(id);
+    const atual = await prisma.tarefas.findUnique({ where: { id: idNum } });
+    if (!atual) return null;
 
-    const setClauses = [];
-    const values = [];
-    let paramIndex = 1;
+    let iniciadaEm = atual.iniciada_em;
+    let concluidaEm = atual.concluida_em;
 
-    for (const [chave, colunaBanco] of Object.entries(mapaCampos)) {
-      if (dados[chave] !== undefined) {
-        setClauses.push(`${colunaBanco} = $${paramIndex}`);
-        values.push(dados[chave]);
-        paramIndex++;
-      }
+    if (dados.coluna === 'andamento' && !atual.iniciada_em) {
+      iniciadaEm = new Date();
+    }
+    if (dados.coluna === 'concluida' && !atual.concluida_em) {
+      concluidaEm = new Date();
     }
 
-    if (dados.coluna !== undefined) {
-      const concluidaEm = dados.coluna === 'concluido' ? new Date().toISOString() : null;
-      setClauses.push(`concluida_em = $${paramIndex}`);
-      values.push(concluidaEm);
-      paramIndex++;
-    }
-
-    if (setClauses.length === 0) return null;
-
-    values.push(id);
-    const query = `
-      UPDATE tarefas 
-      SET ${setClauses.join(', ')} 
-      WHERE id = $${paramIndex} 
-      RETURNING id, texto, prioridade, coluna, cidade, 
-                usuario_id AS "usuarioId", 
-                concluida_em AS "concluidaEm"
-    `;
-
-    const result = await pool.query(query, values);
-    return result.rows[0] || null;
+    const tarefa = await prisma.tarefas.update({
+      where: { id: idNum },
+      data: {
+        texto: dados.texto,
+        coluna: dados.coluna,
+        idprioridade: Number(dados.idprioridade),
+        usuario_id: Number(dados.usuario_id),
+        projeto_id: Number(dados.projeto_id),
+        iniciada_em: iniciadaEm,
+        concluida_em: concluidaEm,
+      },
+      include: incluirNomes,
+    });
+    return formatarTarefa(tarefa);
   },
 
   remover: async (id) => {
-    const query = `
-      DELETE FROM tarefas 
-      WHERE id = $1 
-      RETURNING id, texto, prioridade, coluna, cidade, 
-                usuario_id AS "usuarioId", 
-                concluida_em AS "concluidaEm"
-    `;
-    const result = await pool.query(query, [id]);
-    return result.rows[0] || null;
-  },
-
-  obterEstatisticas: async (colunaFiltro) => {
-    let query = 'SELECT coluna, prioridade FROM tarefas';
-    const values = [];
-
-    if (colunaFiltro) {
-      query += ' WHERE coluna = $1';
-      values.push(colunaFiltro);
+    try {
+      const tarefa = await prisma.tarefas.delete({
+        where: { id: Number(id) },
+        include: incluirNomes,
+      });
+      return formatarTarefa(tarefa);
+    } catch (erro) {
+      if (erro.code === 'P2025') return null;
+      throw erro;
     }
-
-    const result = await pool.query(query, values);
-    const rows = result.rows;
-
-    const porColuna = {
-      afazer: rows.filter((t) => (t.coluna || 'afazer') === 'afazer').length,
-      andamento: rows.filter((t) => t.coluna === 'andamento').length,
-      concluido: rows.filter((t) => t.coluna === 'concluido').length,
-    };
-
-    const porPrioridade = {
-      alta: rows.filter((t) => t.prioridade === 'alta').length,
-      media: rows.filter((t) => t.prioridade === 'media').length,
-      baixa: rows.filter((t) => t.prioridade === 'baixa').length,
-    };
-
-    const colunaMaisTarefas = Object.entries(porColuna).sort(
-      (a, b) => b[1] - a[1]
-    )[0][0];
-
-    return {
-      total: rows.length,
-      porColuna,
-      porPrioridade,
-      colunaMaisTarefas,
-    };
-  }
+  },
 };
+
+module.exports = tarefaModel;

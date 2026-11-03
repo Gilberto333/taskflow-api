@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
@@ -34,7 +35,7 @@ app.use((req, res) => {
 });
 
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor ativo na porta ${PORT}`);
   console.log(`Documentação Swagger UI disponível em http://localhost:${PORT}/docs`);

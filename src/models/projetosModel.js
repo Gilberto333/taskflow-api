@@ -1,66 +1,60 @@
-const pool = require('../database/db');
+const prisma = require('../database/prisma');
 
-module.exports = {
+const projetoModel = {
   listar: async () => {
-    const query = 'SELECT id, descricao, ativo FROM projetos ORDER BY id ASC';
-    const result = await pool.query(query);
-    return result.rows;
+    return prisma.projetos.findMany({
+      include: {
+        usuarios: { select: { nome: true } },
+      },
+      orderBy: { nome: 'asc' },
+    });
   },
 
   buscar: async (id) => {
-    const query = 'SELECT id, descricao, ativo FROM projetos WHERE id = $1';
-    const result = await pool.query(query, [id]);
-    return result.rows[0] || null;
+    const projeto = await prisma.projetos.findUnique({
+      where: { id: Number(id) },
+      include: {
+        usuarios: { select: { nome: true } },
+      },
+    });
+    return projeto || null;
   },
 
-  adicionar: async ({ descricao = 'teste esse projeto', ativo }) => {
-    const statusAtivo = ativo !== undefined ? ativo : true;
-    const query = `
-      INSERT INTO projetos (descricao, ativo)
-      VALUES ($1, $2)
-      RETURNING id, descricao, ativo
-    `;
-    const values = [descricao, statusAtivo];
-
-    const result = await pool.query(query, values);
-    return result.rows[0];
+  adicionar: async (dados) => {
+    return prisma.projetos.create({
+      data: {
+        nome: dados.nome,
+        descricao: dados.descricao,
+        usuario_id: Number(dados.usuario_id),
+      },
+    });
   },
 
   atualizar: async (id, dados) => {
-    const camposPermitidos = {
-      descricao: 'descricao',
-      ativo: 'ativo'
-    };
+    const idNum = Number(id);
+    const atual = await prisma.projetos.findUnique({ where: { id: idNum } });
+    if (!atual) return null;
 
-    const setClauses = [];
-    const values = [];
-    let paramIndex = 1;
-
-    for (const [chave, colunaBanco] of Object.entries(camposPermitidos)) {
-      if (dados[chave] !== undefined) {
-        setClauses.push(`${colunaBanco} = $${paramIndex}`);
-        values.push(dados[chave]);
-        paramIndex++;
-      }
-    }
-
-    if (setClauses.length === 0) return null;
-
-    values.push(id);
-    const query = `
-      UPDATE projetos 
-      SET ${setClauses.join(', ')} 
-      WHERE id = $${paramIndex} 
-      RETURNING id, descricao, ativo
-    `;
-
-    const result = await pool.query(query, values);
-    return result.rows[0] || null;
+    return prisma.projetos.update({
+      where: { id: idNum },
+      data: {
+        nome: dados.nome,
+        descricao: dados.descricao,
+        usuario_id: Number(dados.usuario_id),
+      },
+    });
   },
 
   remover: async (id) => {
-    const query = 'DELETE FROM projetos WHERE id = $1 RETURNING id, descricao, ativo';
-    const result = await pool.query(query, [id]);
-    return result.rows[0] || null;
-  }
+    try {
+      return await prisma.projetos.delete({
+        where: { id: Number(id) },
+      });
+    } catch (erro) {
+      if (erro.code === 'P2025') return null;
+      throw erro;
+    }
+  },
 };
+
+module.exports = projetoModel;
