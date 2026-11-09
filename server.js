@@ -9,7 +9,7 @@ const autenticar = require('./src/middlewares/autenticar');
 const authRoutes = require('./src/routes/auth.routes');
 const tarefasRoutes = require('./src/routes/tarefas.routes');
 const projetosRoutes = require('./src/routes/projetos.routes');
-const usuariosRoutes = require('./src/routes/usuarios.routes');
+const usuariosRoutes = require('./src/routes/usuarios.Routes');
 
 const app = express();
 
@@ -48,5 +48,5 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor ativo na porta ${PORT}`);
-  console.log(`Documentação Swagger UI disponível em http://localhost:${PORT}/docs`);
+  console.log(`Documentação Swagger UI disponível em http://localhost:${PORT}`);
 });
