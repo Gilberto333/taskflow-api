@@ -7,9 +7,9 @@ const openapi = require('./src/docs/openapi');
 const autenticar = require('./src/middlewares/autenticar');
 
 const authRoutes = require('./src/routes/auth.routes');
-const tarefasRoutes = require('./src/routes/tarefas.Routes');
-const projetosRoutes = require('./src/routes/projetos.Routes');
-const usuariosRoutes = require('./src/routes/usuarios.Routes');
+const usuariosRoutes = require('./src/routes/usuarios.Routes'); 
+const tarefasRoutes = require('./src/routes/tarefas.Routes');   
+const projetosRoutes = require('./src/routes/projetos.Routes'); 
 
 const app = express();
 
@@ -26,16 +26,18 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+
 app.use(express.json());
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
 
 app.use('/auth', authRoutes);
+app.use('/usuarios', usuariosRoutes); 
+
 
 app.use(autenticar);
 app.use('/tarefas', tarefasRoutes);
 app.use('/projetos', projetosRoutes);
-app.use('/usuarios', usuariosRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
