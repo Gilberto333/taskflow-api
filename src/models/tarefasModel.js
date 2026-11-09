@@ -35,31 +35,30 @@ const tarefaModel = {
   },
 
   adicionar: async (dados) => {
-    // Captura os IDs independente se o frontend enviar 'projeto_id' ou 'idprojeto'
     const idPrioridade = Number(dados.idprioridade || dados.prioridade_id || 1);
     const idProjeto = Number(dados.projeto_id || dados.idprojeto || 1); 
-    const idUsuario = Number(dados.usuario_id || dados.idusuario || 0);
+    const idUsuario = Number(dados.usuario_id || dados.idusuario);
+
+    // Validação para evitar disparar o erro do Prisma caso o ID venha ausente/inválido
+    if (!idUsuario || isNaN(idUsuario)) {
+      throw new Error("O campo usuario_id (ou idusuario) é obrigatório para criar a tarefa.");
+    }
 
     const dataPayload = {
       texto: dados.texto,
       coluna: dados.coluna || 'afazer',
       ordem: Number(dados.ordem) || 0,
-      // Relação obrigatória de Prioridade
       prioridades: {
         connect: { id: idPrioridade }
       },
-      // Relação obrigatória de Projeto
       projetos: {
         connect: { id: idProjeto }
+      },
+      // Conexão obrigatória com a relação de usuário
+      usuarios: {
+        connect: { id: idUsuario }
       }
     };
-
-    // Conecta usuário caso tenha sido informado
-    if (idUsuario > 0) {
-      dataPayload.usuarios = {
-        connect: { id: idUsuario }
-      };
-    }
 
     const tarefa = await prisma.tarefas.create({
       data: dataPayload,
@@ -94,13 +93,13 @@ const tarefaModel = {
     const idProjeto = dados.projeto_id || dados.idprojeto;
     const idUsuario = dados.usuario_id || dados.idusuario;
 
-    if (idPrioridade) {
+    if (idPrioridade && !isNaN(Number(idPrioridade))) {
       dataPayload.prioridades = { connect: { id: Number(idPrioridade) } };
     }
-    if (idProjeto) {
+    if (idProjeto && !isNaN(Number(idProjeto))) {
       dataPayload.projetos = { connect: { id: Number(idProjeto) } };
     }
-    if (idUsuario) {
+    if (idUsuario && !isNaN(Number(idUsuario))) {
       dataPayload.usuarios = { connect: { id: Number(idUsuario) } };
     }
 
@@ -124,6 +123,15 @@ const tarefaModel = {
       throw erro;
     }
   },
+
+  // Método adicionado para atender a chamada feita no usuariosController.js ao remover usuário
+  contarPorUsuario: async (idUsuario) => {
+    return await prisma.tarefas.count({
+      where: {
+        usuarios: { id: Number(idUsuario) }
+      }
+    });
+  }
 };
 
 module.exports = tarefaModel;
