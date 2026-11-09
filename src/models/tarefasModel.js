@@ -35,13 +35,18 @@ const tarefaModel = {
   },
 
   adicionar: async (dados) => {
-    const idPrioridade = Number(dados.idprioridade || dados.prioridade_id || 1);
-    const idProjeto = Number(dados.projeto_id || dados.idprojeto || 1); 
+    const idPrioridade = Number(dados.prioridade_id || dados.idprioridade);
+    const idProjeto = Number(dados.projeto_id || dados.idprojeto);
     const idUsuario = Number(dados.usuario_id || dados.idusuario);
 
-    // Validação para evitar disparar o erro do Prisma caso o ID venha ausente/inválido
+    if (!idProjeto || isNaN(idProjeto)) {
+      throw new Error("O campo projeto_id (ou idprojeto) é obrigatório.");
+    }
     if (!idUsuario || isNaN(idUsuario)) {
-      throw new Error("O campo usuario_id (ou idusuario) é obrigatório para criar a tarefa.");
+      throw new Error("O campo usuario_id (ou idusuario) é obrigatório.");
+    }
+    if (!idPrioridade || isNaN(idPrioridade)) {
+      throw new Error("O campo prioridade_id (ou idprioridade) é obrigatório.");
     }
 
     const dataPayload = {
@@ -54,17 +59,23 @@ const tarefaModel = {
       projetos: {
         connect: { id: idProjeto }
       },
-      // Conexão obrigatória com a relação de usuário
       usuarios: {
         connect: { id: idUsuario }
       }
     };
 
-    const tarefa = await prisma.tarefas.create({
-      data: dataPayload,
-      include: incluirNomes,
-    });
-    return formatarTarefa(tarefa);
+    try {
+      const tarefa = await prisma.tarefas.create({
+        data: dataPayload,
+        include: incluirNomes,
+      });
+      return formatarTarefa(tarefa);
+    } catch (erro) {
+      if (erro.code === 'P2025') {
+        throw new Error("O projeto, usuário ou prioridade informado não existe no banco de dados.");
+      }
+      throw erro;
+    }
   },
 
   atualizar: async (id, dados) => {
@@ -89,7 +100,7 @@ const tarefaModel = {
       concluida_em: concluidaEm,
     };
 
-    const idPrioridade = dados.idprioridade || dados.prioridade_id;
+    const idPrioridade = dados.prioridade_id || dados.idprioridade;
     const idProjeto = dados.projeto_id || dados.idprojeto;
     const idUsuario = dados.usuario_id || dados.idusuario;
 
@@ -103,12 +114,19 @@ const tarefaModel = {
       dataPayload.usuarios = { connect: { id: Number(idUsuario) } };
     }
 
-    const tarefa = await prisma.tarefas.update({
-      where: { id: idNum },
-      data: dataPayload,
-      include: incluirNomes,
-    });
-    return formatarTarefa(tarefa);
+    try {
+      const tarefa = await prisma.tarefas.update({
+        where: { id: idNum },
+        data: dataPayload,
+        include: incluirNomes,
+      });
+      return formatarTarefa(tarefa);
+    } catch (erro) {
+      if (erro.code === 'P2025') {
+        throw new Error("O relacionamento informado (projeto, usuário ou prioridade) não existe.");
+      }
+      throw erro;
+    }
   },
 
   remover: async (id) => {
@@ -124,11 +142,12 @@ const tarefaModel = {
     }
   },
 
-  // Método adicionado para atender a chamada feita no usuariosController.js ao remover usuário
   contarPorUsuario: async (idUsuario) => {
+    const idNum = Number(idUsuario);
+    if (!idNum || isNaN(idNum)) return 0;
     return await prisma.tarefas.count({
       where: {
-        usuarios: { id: Number(idUsuario) }
+        usuarios: { id: idNum }
       }
     });
   }

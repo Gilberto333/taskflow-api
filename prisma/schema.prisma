@@ -19,9 +19,9 @@ model projetos {
   id         Int       @id @default(autoincrement())
   nome       String
   descricao  String?
-  usuario_id Int
+  usuario_id Int?      // Adicionado ? para permitir null
   criado_em  DateTime? @default(now()) @db.Timestamp(6)
-  usuarios   usuarios  @relation(fields: [usuario_id], references: [id])
+  usuarios   usuarios? @relation(fields: [usuario_id], references: [id]) // Adicionado ? para permitir null
   tarefas    tarefas[]
 }
 
