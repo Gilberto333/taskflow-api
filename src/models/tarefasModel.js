@@ -35,15 +35,23 @@ const tarefaModel = {
   },
 
   adicionar: async (dados) => {
+    // Garante conversão correta e evita NaN caso venha undefined/null
+    const idPrioridade = dados.idprioridade ? Number(dados.idprioridade) : 1;
+    const usuarioId = dados.usuario_id ? Number(dados.usuario_id) : undefined;
+    const projetoId = dados.projeto_id ? Number(dados.projeto_id) : undefined;
+
+    const dataPayload = {
+      texto: dados.texto,
+      coluna: dados.coluna || 'afazer',
+      ordem: Number(dados.ordem) || 0,
+      idprioridade: idPrioridade,
+    };
+
+    if (usuarioId) dataPayload.usuario_id = usuarioId;
+    if (projetoId) dataPayload.projeto_id = projetoId;
+
     const tarefa = await prisma.tarefas.create({
-      data: {
-        texto: dados.texto,
-        coluna: dados.coluna || 'afazer',
-        ordem: Number(dados.ordem) || 0,
-        idprioridade: Number(dados.idprioridade) || 2,
-        usuario_id: Number(dados.usuario_id),
-        projeto_id: Number(dados.projeto_id),
-      },
+      data: dataPayload,
       include: incluirNomes,
     });
     return formatarTarefa(tarefa);
@@ -64,17 +72,20 @@ const tarefaModel = {
       concluidaEm = new Date();
     }
 
+    const dataPayload = {
+      texto: dados.texto !== undefined ? dados.texto : atual.texto,
+      coluna: dados.coluna !== undefined ? dados.coluna : atual.coluna,
+      iniciada_em: iniciadaEm,
+      concluida_em: concluidaEm,
+    };
+
+    if (dados.idprioridade) dataPayload.idprioridade = Number(dados.idprioridade);
+    if (dados.usuario_id) dataPayload.usuario_id = Number(dados.usuario_id);
+    if (dados.projeto_id) dataPayload.projeto_id = Number(dados.projeto_id);
+
     const tarefa = await prisma.tarefas.update({
       where: { id: idNum },
-      data: {
-        texto: dados.texto,
-        coluna: dados.coluna,
-        idprioridade: Number(dados.idprioridade),
-        usuario_id: Number(dados.usuario_id),
-        projeto_id: Number(dados.projeto_id),
-        iniciada_em: iniciadaEm,
-        concluida_em: concluidaEm,
-      },
+      data: dataPayload,
       include: incluirNomes,
     });
     return formatarTarefa(tarefa);
