@@ -35,26 +35,30 @@ const tarefaModel = {
   },
 
   adicionar: async (dados) => {
-    const idPrioridade = dados.idprioridade ? Number(dados.idprioridade) : 1;
-    const usuarioId = dados.usuario_id ? Number(dados.usuario_id) : undefined;
-    const projetoId = dados.projeto_id ? Number(dados.projeto_id) : undefined;
+    // Captura os IDs independente se o frontend enviar 'projeto_id' ou 'idprojeto'
+    const idPrioridade = Number(dados.idprioridade || dados.prioridade_id || 1);
+    const idProjeto = Number(dados.projeto_id || dados.idprojeto || 1); 
+    const idUsuario = Number(dados.usuario_id || dados.idusuario || 0);
 
     const dataPayload = {
       texto: dados.texto,
       coluna: dados.coluna || 'afazer',
       ordem: Number(dados.ordem) || 0,
-      // Conecta o relacionamento com a tabela prioridades
+      // Relação obrigatória de Prioridade
       prioridades: {
         connect: { id: idPrioridade }
+      },
+      // Relação obrigatória de Projeto
+      projetos: {
+        connect: { id: idProjeto }
       }
     };
 
-    // Conecta as relações de usuário e projeto apenas se os IDs forem fornecidos
-    if (usuarioId) {
-      dataPayload.usuarios = { connect: { id: usuarioId } };
-    }
-    if (projetoId) {
-      dataPayload.projetos = { connect: { id: projetoId } };
+    // Conecta usuário caso tenha sido informado
+    if (idUsuario > 0) {
+      dataPayload.usuarios = {
+        connect: { id: idUsuario }
+      };
     }
 
     const tarefa = await prisma.tarefas.create({
@@ -86,14 +90,18 @@ const tarefaModel = {
       concluida_em: concluidaEm,
     };
 
-    if (dados.idprioridade) {
-      dataPayload.prioridades = { connect: { id: Number(dados.idprioridade) } };
+    const idPrioridade = dados.idprioridade || dados.prioridade_id;
+    const idProjeto = dados.projeto_id || dados.idprojeto;
+    const idUsuario = dados.usuario_id || dados.idusuario;
+
+    if (idPrioridade) {
+      dataPayload.prioridades = { connect: { id: Number(idPrioridade) } };
     }
-    if (dados.usuario_id) {
-      dataPayload.usuarios = { connect: { id: Number(dados.usuario_id) } };
+    if (idProjeto) {
+      dataPayload.projetos = { connect: { id: Number(idProjeto) } };
     }
-    if (dados.projeto_id) {
-      dataPayload.projetos = { connect: { id: Number(dados.projeto_id) } };
+    if (idUsuario) {
+      dataPayload.usuarios = { connect: { id: Number(idUsuario) } };
     }
 
     const tarefa = await prisma.tarefas.update({
