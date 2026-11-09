@@ -7,8 +7,8 @@ const openapi = require('./src/docs/openapi');
 const autenticar = require('./src/middlewares/autenticar');
 
 const authRoutes = require('./src/routes/auth.routes');
-const tarefasRoutes = require('./src/routes/tarefas.routes');
-const projetosRoutes = require('./src/routes/projetos.routes');
+const tarefasRoutes = require('./src/routes/tarefas.Routes');
+const projetosRoutes = require('./src/routes/projetos.Routes');
 const usuariosRoutes = require('./src/routes/usuarios.Routes');
 
 const app = express();
