@@ -35,7 +35,6 @@ const tarefaModel = {
   },
 
   adicionar: async (dados) => {
-    // Garante conversão correta e evita NaN caso venha undefined/null
     const idPrioridade = dados.idprioridade ? Number(dados.idprioridade) : 1;
     const usuarioId = dados.usuario_id ? Number(dados.usuario_id) : undefined;
     const projetoId = dados.projeto_id ? Number(dados.projeto_id) : undefined;
@@ -44,11 +43,19 @@ const tarefaModel = {
       texto: dados.texto,
       coluna: dados.coluna || 'afazer',
       ordem: Number(dados.ordem) || 0,
-      idprioridade: idPrioridade,
+      // Conecta o relacionamento com a tabela prioridades
+      prioridades: {
+        connect: { id: idPrioridade }
+      }
     };
 
-    if (usuarioId) dataPayload.usuario_id = usuarioId;
-    if (projetoId) dataPayload.projeto_id = projetoId;
+    // Conecta as relações de usuário e projeto apenas se os IDs forem fornecidos
+    if (usuarioId) {
+      dataPayload.usuarios = { connect: { id: usuarioId } };
+    }
+    if (projetoId) {
+      dataPayload.projetos = { connect: { id: projetoId } };
+    }
 
     const tarefa = await prisma.tarefas.create({
       data: dataPayload,
@@ -79,9 +86,15 @@ const tarefaModel = {
       concluida_em: concluidaEm,
     };
 
-    if (dados.idprioridade) dataPayload.idprioridade = Number(dados.idprioridade);
-    if (dados.usuario_id) dataPayload.usuario_id = Number(dados.usuario_id);
-    if (dados.projeto_id) dataPayload.projeto_id = Number(dados.projeto_id);
+    if (dados.idprioridade) {
+      dataPayload.prioridades = { connect: { id: Number(dados.idprioridade) } };
+    }
+    if (dados.usuario_id) {
+      dataPayload.usuarios = { connect: { id: Number(dados.usuario_id) } };
+    }
+    if (dados.projeto_id) {
+      dataPayload.projetos = { connect: { id: Number(dados.projeto_id) } };
+    }
 
     const tarefa = await prisma.tarefas.update({
       where: { id: idNum },
