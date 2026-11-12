@@ -4,13 +4,39 @@ const usuarioModel = require("../models/usuariosModel");
 const PRIORIDADES_VALIDAS = ["alta", "media", "baixa"];
 const COLUNAS_VALIDAS = ["afazer", "andamento", "concluido"];
 
+function obterUsuarioId(req) {
+  const candidatos = [
+    req.body?.usuario_id,
+    req.body?.usuarioId,
+    req.body?.idusuario,
+    req.body?.usuario,
+    req.usuario?.id,
+  ];
+
+  for (const val of candidatos) {
+    if (val !== undefined && val !== null && val !== "" && typeof val !== "boolean") {
+      const num = Number(val);
+      if (!isNaN(num) && num > 0) return num;
+    }
+  }
+  return null;
+}
+
+function prioridadeValida(prioridade) {
+  if (prioridade === undefined || prioridade === null || prioridade === "") return true;
+  if (typeof prioridade !== "boolean" && !isNaN(Number(prioridade))) {
+    return Number(prioridade) > 0;
+  }
+  return PRIORIDADES_VALIDAS.includes(String(prioridade).trim().toLowerCase());
+}
+
 const tarefasController = {
   async listar(req, res) {
     try {
       const resultado = await tarefaModel.listar(req.query);
       res.json(resultado);
     } catch (error) {
-  
+      console.error("Erro ao listar tarefas:", error);
       res.status(500).json({ erro: "Erro ao buscar tarefas" });
     }
   },
@@ -33,18 +59,22 @@ const tarefasController = {
   async criar(req, res) {
     try {
       const { texto, prioridade, coluna } = req.body;
-      const usuarioId = req.usuario?.id; 
+      const usuarioId = obterUsuarioId(req);
 
       if (!texto) {
         return res.status(400).json({ erro: "O texto da tarefa é obrigatório" });
       }
 
-      if (prioridade && !PRIORIDADES_VALIDAS.includes(prioridade)) {
-        return res.status(400).json({ erro: "Prioridade inválida. Use: alta, media ou baixa" });
+      if (!prioridadeValida(prioridade)) {
+        return res.status(400).json({ erro: "Prioridade inválida. Use: alta, media, baixa ou um ID válido" });
       }
 
       if (coluna && !COLUNAS_VALIDAS.includes(coluna)) {
         return res.status(400).json({ erro: "Coluna inválida. Use: afazer, andamento ou concluido" });
+      }
+
+      if (!usuarioId) {
+        return res.status(400).json({ erro: "O usuário da tarefa é obrigatório" });
       }
 
       const usuarioExiste = await usuarioModel.buscar(usuarioId);
@@ -67,24 +97,30 @@ const tarefasController = {
 
       const tarefa = await tarefaModel.adicionar({
         ...req.body,
-        usuarioId,
+        usuario_id: usuarioId,
       });
 
       res.status(201).json(tarefa);
     } catch (error) {
       console.error("Erro detalhado no criar:", error);
-      res.status(500).json({ erro: "Erro ao criar tarefa" });
+      const isValidacao =
+        error.message?.includes("obrigatório") ||
+        error.message?.includes("não existe");
+      res.status(isValidacao ? 400 : 500).json({
+        erro: isValidacao ? error.message : "Erro ao criar tarefa",
+        detalhe: error.message,
+      });
     }
   },
 
   async atualizar(req, res) {
     try {
       const id = parseInt(req.params.id);
-      const { prioridade, coluna, usuarioId } = req.body;
+      const { prioridade, coluna } = req.body;
 
-      if (prioridade && !PRIORIDADES_VALIDAS.includes(prioridade)) {
+      if (!prioridadeValida(prioridade)) {
         return res.status(400).json({
-          erro: "Prioridade inválida. Use: alta, media ou baixa",
+          erro: "Prioridade inválida. Use: alta, media, baixa ou um ID válido",
         });
       }
 
@@ -99,7 +135,8 @@ const tarefasController = {
         return res.status(404).json({ erro: "Tarefa não encontrada" });
       }
 
-      const usuarioAlvoId = usuarioId ? parseInt(usuarioId) : tarefaAtual.usuario_id;
+      const usuarioBodyId = obterUsuarioId({ body: req.body });
+      const usuarioAlvoId = usuarioBodyId || tarefaAtual.usuario_id;
       const proximaColuna = coluna || tarefaAtual.coluna;
 
       const mudouParaAndamento = proximaColuna === "andamento" && tarefaAtual.coluna !== "andamento";
@@ -121,7 +158,8 @@ const tarefasController = {
       const atualizada = await tarefaModel.atualizar(id, req.body);
       res.json(atualizada);
     } catch (error) {
-      res.status(500).json({ erro: "Erro ao atualizar tarefa" });
+      console.error("Erro detalhado no atualizar:", error);
+      res.status(500).json({ erro: "Erro ao atualizar tarefa", detalhe: error.message });
     }
   },
 
@@ -145,6 +183,7 @@ const tarefasController = {
       const dadosEstatistcos = await tarefaModel.obterEstatisticas(req.query.coluna);
       res.json(dadosEstatistcos);
     } catch (error) {
+      console.error("Erro ao buscar estatísticas:", error);
       res.status(500).json({ erro: "Erro ao buscar estatísticas" });
     }
   },

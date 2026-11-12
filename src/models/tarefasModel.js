@@ -17,6 +17,51 @@ function formatarTarefa(tarefa) {
   };
 }
 
+function extrairId(...candidatos) {
+  for (const val of candidatos) {
+    if (val !== undefined && val !== null && val !== '' && typeof val !== 'boolean') {
+      const num = Number(val);
+      if (!isNaN(num) && num > 0) return num;
+    }
+  }
+  return null;
+}
+
+async function resolverPrioridadeId(dados) {
+  const bruto =
+    dados.prioridade_id ??
+    dados.idprioridade ??
+    dados.prioridadeId ??
+    dados.prioridade;
+
+  if (bruto === undefined || bruto === null || bruto === '' || typeof bruto === 'boolean') {
+    return null;
+  }
+
+  if (!isNaN(Number(bruto))) {
+    const num = Number(bruto);
+    return num > 0 ? num : null;
+  }
+
+  if (typeof bruto === 'string') {
+    const normalizar = (str) =>
+      str
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+    const alvo = normalizar(bruto);
+    const prioridades = await prisma.prioridades.findMany();
+    const encontrada = prioridades.find(
+      (p) => p.descricao && normalizar(p.descricao) === alvo
+    );
+    return encontrada ? encontrada.id : null;
+  }
+
+  return null;
+}
+
 const tarefaModel = {
   listar: async () => {
     const lista = await prisma.tarefas.findMany({
@@ -35,18 +80,18 @@ const tarefaModel = {
   },
 
   adicionar: async (dados) => {
-    const idPrioridade = Number(dados.prioridade_id || dados.idprioridade);
-    const idProjeto = Number(dados.projeto_id || dados.idprojeto);
-    const idUsuario = Number(dados.usuario_id || dados.idusuario || dados.usuarioId);
+    const idPrioridade = await resolverPrioridadeId(dados);
+    const idProjeto = extrairId(dados.projeto_id, dados.idprojeto, dados.projetoId, dados.projeto);
+    const idUsuario = extrairId(dados.usuario_id, dados.idusuario, dados.usuarioId, dados.usuario);
 
-    if (!idProjeto || isNaN(idProjeto)) {
-      throw new Error("O campo projeto_id (ou idprojeto) é obrigatório.");
+    if (!idProjeto) {
+      throw new Error("O campo projeto_id é obrigatório.");
     }
-    if (!idUsuario || isNaN(idUsuario)) {
-      throw new Error("O campo usuario_id (ou idusuario) é obrigatório.");
+    if (!idUsuario) {
+      throw new Error("O campo usuario_id é obrigatório.");
     }
-    if (!idPrioridade || isNaN(idPrioridade)) {
-      throw new Error("O campo prioridade_id (ou idprioridade) é obrigatório.");
+    if (!idPrioridade) {
+      throw new Error("O campo prioridade_id (ou prioridade válida) é obrigatório.");
     }
 
     const dataPayload = {
@@ -54,14 +99,14 @@ const tarefaModel = {
       coluna: dados.coluna || 'afazer',
       ordem: Number(dados.ordem) || 0,
       prioridades: {
-        connect: { id: idPrioridade }
+        connect: { id: idPrioridade },
       },
       projetos: {
-        connect: { id: idProjeto }
+        connect: { id: idProjeto },
       },
       usuarios: {
-        connect: { id: idUsuario }
-      }
+        connect: { id: idUsuario },
+      },
     };
 
     try {
@@ -100,18 +145,18 @@ const tarefaModel = {
       concluida_em: concluidaEm,
     };
 
-    const idPrioridade = dados.prioridade_id || dados.idprioridade;
-    const idProjeto = dados.projeto_id || dados.idprojeto;
-    const idUsuario = dados.usuario_id || dados.idusuario || dados.usuarioId;
+    const idPrioridade = await resolverPrioridadeId(dados);
+    const idProjeto = extrairId(dados.projeto_id, dados.idprojeto, dados.projetoId, dados.projeto);
+    const idUsuario = extrairId(dados.usuario_id, dados.idusuario, dados.usuarioId, dados.usuario);
 
-    if (idPrioridade && !isNaN(Number(idPrioridade))) {
-      dataPayload.prioridades = { connect: { id: Number(idPrioridade) } };
+    if (idPrioridade) {
+      dataPayload.prioridades = { connect: { id: idPrioridade } };
     }
-    if (idProjeto && !isNaN(Number(idProjeto))) {
-      dataPayload.projetos = { connect: { id: Number(idProjeto) } };
+    if (idProjeto) {
+      dataPayload.projetos = { connect: { id: idProjeto } };
     }
-    if (idUsuario && !isNaN(Number(idUsuario))) {
-      dataPayload.usuarios = { connect: { id: Number(idUsuario) } };
+    if (idUsuario) {
+      dataPayload.usuarios = { connect: { id: idUsuario } };
     }
 
     try {
@@ -147,8 +192,8 @@ const tarefaModel = {
     if (!idNum || isNaN(idNum)) return 0;
     return await prisma.tarefas.count({
       where: {
-        usuarios: { id: idNum }
-      }
+        usuarios: { id: idNum },
+      },
     });
   },
 
@@ -159,9 +204,25 @@ const tarefaModel = {
       where: {
         usuarios: { id: idNum },
         coluna: coluna,
-      }
+      },
     });
-  }
+  },
+
+  obterEstatisticas: async (coluna) => {
+    if (coluna) {
+      const total = await prisma.tarefas.count({ where: { coluna } });
+      return { coluna, total };
+    }
+
+    const [total, afazer, andamento, concluido] = await Promise.all([
+      prisma.tarefas.count(),
+      prisma.tarefas.count({ where: { coluna: 'afazer' } }),
+      prisma.tarefas.count({ where: { coluna: 'andamento' } }),
+      prisma.tarefas.count({ where: { coluna: 'concluido' } }),
+    ]);
+
+    return { total, afazer, andamento, concluido };
+  },
 };
 
 module.exports = tarefaModel;
