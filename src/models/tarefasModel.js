@@ -37,7 +37,7 @@ const tarefaModel = {
   adicionar: async (dados) => {
     const idPrioridade = Number(dados.prioridade_id || dados.idprioridade);
     const idProjeto = Number(dados.projeto_id || dados.idprojeto);
-    const idUsuario = Number(dados.usuario_id || dados.idusuario);
+    const idUsuario = Number(dados.usuario_id || dados.idusuario || dados.usuarioId);
 
     if (!idProjeto || isNaN(idProjeto)) {
       throw new Error("O campo projeto_id (ou idprojeto) é obrigatório.");
@@ -89,7 +89,7 @@ const tarefaModel = {
     if (dados.coluna === 'andamento' && !atual.iniciada_em) {
       iniciadaEm = new Date();
     }
-    if (dados.coluna === 'concluida' && !atual.concluida_em) {
+    if (dados.coluna === 'concluido' && !atual.concluida_em) {
       concluidaEm = new Date();
     }
 
@@ -102,7 +102,7 @@ const tarefaModel = {
 
     const idPrioridade = dados.prioridade_id || dados.idprioridade;
     const idProjeto = dados.projeto_id || dados.idprojeto;
-    const idUsuario = dados.usuario_id || dados.idusuario;
+    const idUsuario = dados.usuario_id || dados.idusuario || dados.usuarioId;
 
     if (idPrioridade && !isNaN(Number(idPrioridade))) {
       dataPayload.prioridades = { connect: { id: Number(idPrioridade) } };
@@ -148,6 +148,17 @@ const tarefaModel = {
     return await prisma.tarefas.count({
       where: {
         usuarios: { id: idNum }
+      }
+    });
+  },
+
+  contarPorUsuarioEColuna: async (idUsuario, coluna) => {
+    const idNum = Number(idUsuario);
+    if (!idNum || isNaN(idNum)) return 0;
+    return await prisma.tarefas.count({
+      where: {
+        usuarios: { id: idNum },
+        coluna: coluna,
       }
     });
   }
