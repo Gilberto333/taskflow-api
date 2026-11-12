@@ -29,17 +29,27 @@ const projetosController = {
 
   async criar(req, res) {
     try {
-      const { descricao } = req.body;
+      const { nome, descricao } = req.body;
+      const usuarioId = req.usuario?.id || req.body.usuario_id || req.body.usuarioId;
 
-      if (!descricao) {
-        return res.status(400).json({ erro: "A descrição do projeto é obrigatória" });
+      if (!nome) {
+        return res.status(400).json({ erro: "O nome do projeto é obrigatório" });
       }
 
-      const novoProjeto = await projetoModel.adicionar(req.body);
+      if (!usuarioId) {
+        return res.status(400).json({ erro: "Usuário não identificado" });
+      }
+
+      const novoProjeto = await projetoModel.adicionar({
+        nome,
+        descricao,
+        usuario_id: usuarioId,
+      });
+
       res.status(201).json(novoProjeto);
     } catch (error) {
       console.error("Erro ao criar projeto:", error);
-      res.status(500).json({ erro: "Erro ao criar projeto" });
+      res.status(500).json({ erro: error.message || "Erro ao criar projeto" });
     }
   },
 
@@ -56,7 +66,7 @@ const projetosController = {
       res.json(projetoAtualizado);
     } catch (error) {
       console.error("Erro ao atualizar projeto:", error);
-      res.status(500).json({ erro: "Erro ao atualizar projeto" });
+      res.status(500).json({ erro: error.message || "Erro ao atualizar projeto" });
     }
   },
 
