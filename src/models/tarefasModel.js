@@ -56,7 +56,22 @@ async function resolverPrioridadeId(dados) {
     const encontrada = prioridades.find(
       (p) => p.descricao && normalizar(p.descricao) === alvo
     );
-    return encontrada ? encontrada.id : null;
+
+    if (encontrada) {
+      return encontrada.id;
+    }
+
+    // Se a tabela 'prioridades' estiver vazia no banco, cria o registro automaticamente
+    if (['baixa', 'media', 'alta'].includes(alvo)) {
+      try {
+        const nova = await prisma.prioridades.create({
+          data: { descricao: alvo },
+        });
+        return nova.id;
+      } catch (e) {
+        console.error('Erro ao criar prioridade automaticamente:', e.message);
+      }
+    }
   }
 
   return null;
